@@ -44,6 +44,7 @@ else() # compiler for serial build
 
 endif()
 
+#https://docs.dkrz.de/doc/levante/code-development/compiling-and-linking.html#libraries-from-the-software-tree
 #set(FFTW_INCLUDE_DIR   "/usr/local/include")
 #set(FFTW_LIB           "/usr/local/lib/libfftw3.a")
 set(FFTW_LIB           "-lfftw3")
@@ -51,7 +52,11 @@ set(INCLUDE_DIRS ${FFTW_INCLUDE_DIR})
 set(LIBS ${FFTW_LIB})
 
 add_definitions(-DUSE_NETCDF)
-set(NC_INCLUDE_DIR     "/sw/buster-x64/io/netcdf-c-4.7.4-fortran-4.5.2-cxx4-4.3.1-cxx-4.2-gccsys/include")
-set(NC_LIB             "-L/sw/buster-x64/io/netcdf-c-4.7.4-fortran-4.5.2-cxx4-4.3.1-cxx-4.2-gccsys/lib -Wl,-rpath -Wl,/sw/buster-x64/io/netcdf-c-4.7.4-fortran-4.5.2-cxx4-4.3.1-cxx-4.2-gccsys/lib -lnetcdff")
+#set(NC_INCLUDE_DIR     "/sw/buster-x64/io/netcdf-c-4.7.4-fortran-4.5.2-cxx4-4.3.1-cxx-4.2-gccsys/include")
+#set(NC_LIB             "-L/sw/buster-x64/io/netcdf-c-4.7.4-fortran-4.5.2-cxx4-4.3.1-cxx-4.2-gccsys/lib -Wl,-rpath -Wl,/sw/buster-x64/io/netcdf-c-4.7.4-fortran-4.5.2-cxx4-4.3.1-cxx-4.2-gccsys/lib -lnetcdff")
+set(NC_INCLUDE_DIR     "/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include")
+set(NC_LIB             "-I/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include \
+                        -L/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -lnetcdff \
+                        -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib")
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${NC_INCLUDE_DIR})
 set(LIBS ${LIBS} ${NC_LIB})
