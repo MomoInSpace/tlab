@@ -14,9 +14,10 @@ if ( ${BUILD_TYPE} STREQUAL "PARALLEL" ) # compiler for parallel build
 elseif(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration 
   set(ENV{FC} nvfortran)
   set(CMAKE_Fortran_COMPILER nvfortran)
-  set(CMAKE_Fortran_FLAGS "-acc=verystrict,gpu -target=gpu -Minfo=accel,inline -gpu=ccnative,lineinfo -pg -Mfree")
+  set(CMAKE_Fortran_FLAGS "-acc=verystrict,gpu -target=gpu -Minfo=accel,inline -gpu=cc80,lineinfo -pg -Mfree -cpp -Mfree")
   #set(USER_Fortran_FLAGS_DEBUG "-O0 -pg -ggdb -Wall -fbacktrace -ffpe-summary=all")
   #set(USER_Fortran_FLAGS "-cpp -ffree-form -ffree-line-length-none -fno-automatic")
+  #set(CMAKE_Fortran_FLAGS "-acc=gpu -target=gpu -Minfo=accel,inline -gpu=lineinfo,cc80 -cpp")#gpu=ccnative
   add_definitions(-D_DEBUG)
   set(CMKAE_BUILD_TYPE DEBUG)
 
