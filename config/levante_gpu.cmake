@@ -49,14 +49,24 @@ endif()
 
 #set(FFTW_INCLUDE_DIR   "/usr/local/include")
 #set(FFTW_LIB           "/usr/local/lib/libfftw3.a")
-set(FFTW_LIB           "-lfftw3")
+#set(FFTW_INCLUDE_DIR   "/home/m/m300912/local_include/include")
+#set(FFTW_LIB           "/home/m/m300912/local_include/lib/libfftw.a")
+#set(FFTW_LIB           "-lfftw3")
+set(FFTW_INCLUDE_DIR   "/sw/spack-levante/fftw-3.3.10-fnfhvr/include/")
+set(FFTW_LIB           "/sw/spack-levante/fftw-3.3.10-fnfhvr/lib/libfftw3.a")
 set(INCLUDE_DIRS ${FFTW_INCLUDE_DIR})
 set(LIBS ${FFTW_LIB})
 
 add_definitions(-DUSE_NETCDF)
-set(NC_INCLUDE_DIR     "/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include")
-set(NC_LIB             "-I/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include \
-                        -L/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -lnetcdff \
-                        -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib")
+#set(NC_INCLUDE_DIR     "/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include")
+#set(NC_LIB             "-I/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include \
+#                        -L/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -lnetcdff \
+#                        -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib")
+#			prepend-path    C_INCLUDE_PATH /sw/spack-levante/netcdf-fortran-4.5.3-5di6qe/include
+set(NC_INCLUDE_DIR     "/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/include")
+set(NC_LIB             "-I/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/include \
+                        -L/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/lib -lnetcdff \
+                        -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/lib")
+
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${NC_INCLUDE_DIR})
 set(LIBS ${LIBS} ${NC_LIB})
