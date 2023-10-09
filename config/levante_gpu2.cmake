@@ -1,4 +1,4 @@
-iif ( NOT BUILD_TYPE )
+if ( NOT BUILD_TYPE )
    message( WARNING "Setting CMAKE_BUILD_TYPE to default value." )
    set(BUILD_TYPE BIG)
 endif()
