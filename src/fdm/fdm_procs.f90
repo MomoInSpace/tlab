@@ -312,21 +312,51 @@ contains
         ! -------------------------------------------------------------------
         integer(wi) n
 
-        ! -------------------------------------------------------------------
+        ! GPU-Code ===========================================================
         ! Boundary
+        !$acc kernels
         n = 1
-        f(:, n) = f(:, n) + u(:, n)*r2(n) + u(:, n + 1)*r3(n)
+        !$acc loop
+        do len_id = 1, len
+            f(len_id, n) = f(len_id, n) + u(len_id, n)*r2(n) + u(len_id, n + 1)*r3(n)
+        end do
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
+        !$acc loop
         do n = 2, nx - 1
-            f(:, n) = f(:, n) + u(:, n - 1)*r1(n) + u(:, n)*r2(n) + u(:, n + 1)*r3(n)
+            !$acc loop
+            do len_id = 1, len
+                f(len_id, n) = f(len_id, n) + u(len_id, n - 1)*r1(n) + u(len_id, n)*r2(n) + u(len_id, n + 1)*r3(n)
+            end do
         end do
 
         ! -------------------------------------------------------------------
         ! Boundary
         n = nx
-        f(:, n) = f(:, n) + u(:, n - 1)*r1(n) + u(:, n)*r2(n)
+        !$acc loop
+        do len_id = 1, len
+            f(len_id, n) = f(len_id, n) + u(len_id, n - 1)*r1(n) + u(len_id, n)*r2(n)
+        end do
+        !$acc end kernels
+        ! ===================================================================
+
+        ! CPU-Code ========================================================== 
+        ! Boundary
+        ! n = 1
+        ! f(:, n) = f(:, n) + u(:, n)*r2(n) + u(:, n + 1)*r3(n)
+
+        ! ! -------------------------------------------------------------------
+        ! ! Interior points; accelerate
+        ! do n = 2, nx - 1
+        !     f(:, n) = f(:, n) + u(:, n - 1)*r1(n) + u(:, n)*r2(n) + u(:, n + 1)*r3(n)
+        ! end do
+
+        ! ! -------------------------------------------------------------------
+        ! ! Boundary
+        ! n = nx
+        ! f(:, n) = f(:, n) + u(:, n - 1)*r1(n) + u(:, n)*r2(n)
+        ! ===================================================================
 
         return
     end subroutine MatMul_3d_add
@@ -671,48 +701,107 @@ contains
             ibc_loc = BCS_DD
         end if
 
+        ! GPU-Code =================================================================
         ! Boundary
+        !$acc kernels
         if (periodic) then
-            f(:, 1) = r3_loc*u(:, 1) + u(:, 2) + u(:, nx) &
-                      + r5_loc*(u(:, 3) + u(:, nx - 1))
+            !$acc loop
+            do len_id = 1, len
+                f(len_id, 1) = r3_loc*u(len_id, 1) + u(len_id, 2) + u(len_id, nx) &
+                        + r5_loc*(u(len_id, 3) + u(len_id, nx - 1))
 
-            f(:, 2) = r3_loc*u(:, 2) + u(:, 3) + u(:, 1) &
-                      + r5_loc*(u(:, 4) + u(:, nx))
+                f(len_id, 2) = r3_loc*u(len_id, 2) + u(len_id, 3) + u(len_id, 1) &
+                        + r5_loc*(u(len_id, 4) + u(len_id, nx))
+            end do
 
         else
-            f(:, 1) = u(:, 1)*r3(1) + u(:, 2)*r4(1) + u(:, 3)*r5(1) &
-                      + u(:, 4)*r1(1)   ! r1(1) contains 3. superdiagonal to allow for longer stencil at boundary
+            !$acc loop
+            do len_id = 1, len
+                f(len_id, 1) = u(len_id, 1)*r3(1) + u(len_id, 2)*r4(1) + u(len_id, 3)*r5(1) &
+                        + u(len_id, 4)*r1(1)   ! r1(1) contains 3. superdiagonal to allow for longer stencil at boundary
 
-            f(:, 2) = u(:, 1)*r2(2) + u(:, 2)*r3(2) + u(:, 3)*r4(2) + u(:, 4)*r5(2)
+                f(len_id, 2) = u(len_id, 1)*r2(2) + u(len_id, 2)*r3(2) + u(len_id, 3)*r4(2) + u(len_id, 4)*r5(2)
 
-            if (any([BCS_ND, BCS_NN] == ibc_loc)) f(:, 1) = 0.0_wp
+                if (any([BCS_ND, BCS_NN] == ibc_loc)) f(len_id, 1) = 0.0_wp
+            end do
 
         end if
 
         ! Interior points
+        !$acc loop
         do n = 3, nx - 2
-            f(:, n) = r3_loc*u(:, n) + u(:, n + 1) + u(:, n - 1) &
-                      + r5_loc*(u(:, n + 2) + u(:, n - 2))
+            f(len_id, n) = r3_loc*u(len_id, n) + u(len_id, n + 1) + u(len_id, n - 1) &
+                      + r5_loc*(u(len_id, n + 2) + u(len_id, n - 2))
         end do
 
         ! Boundary
         if (periodic) then
-            f(:, nx - 1) = r3_loc*u(:, nx - 1) + u(:, nx) + u(:, nx - 2) &
-                           + r5_loc*(u(:, 1) + u(:, nx - 3))
+            !$acc loop
+            do len_id = 1, len
+                f(len_id, nx - 1) = r3_loc*u(len_id, nx - 1) + u(len_id, nx) + u(len_id, nx - 2) &
+                            + r5_loc*(u(len_id, 1) + u(len_id, nx - 3))
 
-            f(:, nx) = r3_loc*u(:, nx) + u(:, 1) + u(:, nx - 1) &
-                       + r5_loc*(u(:, 2) + u(:, nx - 2))
+                f(len_id, nx) = r3_loc*u(len_id, nx) + u(len_id, 1) + u(len_id, nx - 1) &
+                        + r5_loc*(u(len_id, 2) + u(len_id, nx - 2))
+            end do
 
         else
-            f(:, nx - 1) = u(:, nx - 3)*r1(nx - 1) + u(:, nx - 2)*r2(nx - 1) + u(:, nx - 1)*r3(nx - 1) &
-                           + u(:, nx)*r4(nx - 1)
+            !$acc loop
+            do len_id = 1, len
+                f(len_id, nx - 1) = u(len_id, nx - 3)*r1(nx - 1) + u(len_id, nx - 2)*r2(nx - 1) + u(len_id, nx - 1)*r3(nx - 1) &
+                            + u(len_id, nx)*r4(nx - 1)
 
-            f(:, nx) = u(:, nx - 3)*r5(nx) & ! r5(nx) contains 3. subdiagonal to allow for longer stencil at boundary
-                       + u(:, nx - 2)*r1(nx) + u(:, nx - 1)*r2(nx) + u(:, nx)*r3(nx)
+                f(len_id, nx) = u(len_id, nx - 3)*r5(nx) & ! r5(nx) contains 3. subdiagonal to allow for longer stencil at boundary
+                        + u(len_id, nx - 2)*r1(nx) + u(len_id, nx - 1)*r2(nx) + u(len_id, nx)*r3(nx)
 
-            if (any([BCS_DN, BCS_NN] == ibc_loc)) f(:, nx) = 0.0_wp
-
+                if (any([BCS_DN, BCS_NN] == ibc_loc)) f(len_id, nx) = 0.0_wp
+            end do
         end if
+        !$acc end kernels
+        ! CPU-Code =================================================================
+        ! ! Boundary
+        ! if (periodic) then
+        !     f(:, 1) = r3_loc*u(:, 1) + u(:, 2) + u(:, nx) &
+        !               + r5_loc*(u(:, 3) + u(:, nx - 1))
+
+        !     f(:, 2) = r3_loc*u(:, 2) + u(:, 3) + u(:, 1) &
+        !               + r5_loc*(u(:, 4) + u(:, nx))
+
+        ! else
+        !     f(:, 1) = u(:, 1)*r3(1) + u(:, 2)*r4(1) + u(:, 3)*r5(1) &
+        !               + u(:, 4)*r1(1)   ! r1(1) contains 3. superdiagonal to allow for longer stencil at boundary
+
+        !     f(:, 2) = u(:, 1)*r2(2) + u(:, 2)*r3(2) + u(:, 3)*r4(2) + u(:, 4)*r5(2)
+
+        !     if (any([BCS_ND, BCS_NN] == ibc_loc)) f(:, 1) = 0.0_wp
+
+        ! end if
+
+        ! ! Interior points
+        ! do n = 3, nx - 2
+        !     f(:, n) = r3_loc*u(:, n) + u(:, n + 1) + u(:, n - 1) &
+        !               + r5_loc*(u(:, n + 2) + u(:, n - 2))
+        ! end do
+
+        ! ! Boundary
+        ! if (periodic) then
+        !     f(:, nx - 1) = r3_loc*u(:, nx - 1) + u(:, nx) + u(:, nx - 2) &
+        !                    + r5_loc*(u(:, 1) + u(:, nx - 3))
+
+        !     f(:, nx) = r3_loc*u(:, nx) + u(:, 1) + u(:, nx - 1) &
+        !                + r5_loc*(u(:, 2) + u(:, nx - 2))
+
+        ! else
+        !     f(:, nx - 1) = u(:, nx - 3)*r1(nx - 1) + u(:, nx - 2)*r2(nx - 1) + u(:, nx - 1)*r3(nx - 1) &
+        !                    + u(:, nx)*r4(nx - 1)
+
+        !     f(:, nx) = u(:, nx - 3)*r5(nx) & ! r5(nx) contains 3. subdiagonal to allow for longer stencil at boundary
+        !                + u(:, nx - 2)*r1(nx) + u(:, nx - 1)*r2(nx) + u(:, nx)*r3(nx)
+
+        !     if (any([BCS_DN, BCS_NN] == ibc_loc)) f(:, nx) = 0.0_wp
+
+        ! end if
+        ! =================================================================
 
         return
     end subroutine MatMul_5d_sym
@@ -744,33 +833,42 @@ contains
         else
             ibc_loc = BCS_DD
         end if
-
+        
+        ! GPU-Code =====================================================================
         ! Boundary
+        !$acc kernels
         if (periodic) then
-            f(:, 1) = r4_loc*u(:, 1) + u(:, 2) + u(:, nx) &
-                      + r6_loc*(u(:, 3) + u(:, nx - 1)) &
-                      + r7_loc*(u(:, 4) + u(:, nx - 2))
+            !$acc loop
+            do len_id = 1, len
+            f(len_id, 1) = r4_loc*u(len_id, 1) + u(len_id, 2) + u(len_id, nx) &
+                      + r6_loc*(u(len_id, 3) + u(len_id, nx - 1)) &
+                      + r7_loc*(u(len_id, 4) + u(len_id, nx - 2))
 
-            f(:, 2) = r4_loc*u(:, 2) + u(:, 3) + u(:, 1) &
-                      + r6_loc*(u(:, 4) + u(:, nx)) &
-                      + r7_loc*(u(:, 5) + u(:, nx - 1))
+            f(len_id, 2) = r4_loc*u(len_id, 2) + u(len_id, 3) + u(len_id, 1) &
+                      + r6_loc*(u(len_id, 4) + u(len_id, nx)) &
+                      + r7_loc*(u(len_id, 5) + u(len_id, nx - 1))
 
-            f(:, 3) = r4_loc*u(:, 3) + u(:, 4) + u(:, 2) &
-                      + r6_loc*(u(:, 5) + u(:, 1)) &
-                      + r7_loc*(u(:, 6) + u(:, nx))
+            f(len_id, 3) = r4_loc*u(len_id, 3) + u(len_id, 4) + u(len_id, 2) &
+                      + r6_loc*(u(len_id, 5) + u(len_id, 1)) &
+                      + r7_loc*(u(len_id, 6) + u(len_id, nx))
+            end do
         else
-            f(:, 1) = u(:, 1)*r4(1) + u(:, 2)*r5(1) + u(:, 3)*r6(1) + u(:, 4)*r7(1) &
-                      + u(:, 5)*r1(1)   ! r1(1) contains 4. superdiagonal to allow for longer stencil at boundary
+            !$acc loop
+            do len_id = 1, len
+                f(len_id, 1) = u(len_id, 1)*r4(1) + u(len_id, 2)*r5(1) + u(len_id, 3)*r6(1) + u(len_id, 4)*r7(1) &
+                        + u(len_id, 5)*r1(1)   ! r1(1) contains 4. superdiagonal to allow for longer stencil at boundary
 
-            f(:, 2) = u(:, 1)*r3(2) + u(:, 2)*r4(2) + u(:, 3)*r5(2) + u(:, 4)*r6(2) + u(:, 5)*r7(2)
+                f(len_id, 2) = u(len_id, 1)*r3(2) + u(len_id, 2)*r4(2) + u(len_id, 3)*r5(2) + u(len_id, 4)*r6(2) + u(len_id, 5)*r7(2)
 
-            f(:, 3) = u(:, 1)*r2(3) + u(:, 2)*r3(3) + u(:, 3)*r4(3) + u(:, 4)*r5(3) + u(:, 5)*r6(3) + u(:, 6)*r7(3)
+                f(len_id, 3) = u(len_id, 1)*r2(3) + u(len_id, 2)*r3(3) + u(len_id, 3)*r4(3) + u(len_id, 4)*r5(3) + u(len_id, 5)*r6(3) + u(len_id, 6)*r7(3)
 
-            if (any([BCS_ND, BCS_NN] == ibc_loc)) f(:, 1) = 0.0_wp
+                if (any([BCS_ND, BCS_NN] == ibc_loc)) f(len_id, 1) = 0.0_wp
+            end do
 
         end if
 
         ! Interior points
+        !$acc loop
         do n = 4, nx - 3
             f(:, n) = r4_loc*u(:, n) + u(:, n + 1) + u(:, n - 1) &
                       + r6_loc*(u(:, n + 2) + u(:, n - 2)) &
@@ -779,30 +877,96 @@ contains
 
         ! Boundary
         if (periodic) then
-            f(:, nx - 2) = r4_loc*u(:, nx - 2) + u(:, nx - 1) + u(:, nx - 3) &
-                           + r6_loc*(u(:, nx) + u(:, nx - 4)) &
-                           + r7_loc*(u(:, 1) + u(:, nx - 5))
+            !$acc loop
+            do len_id = 1, len
+                f(len_id, nx - 2) = r4_loc*u(len_id, nx - 2) + u(len_id, nx - 1) + u(len_id, nx - 3) &
+                            + r6_loc*(u(len_id, nx) + u(len_id, nx - 4)) &
+                            + r7_loc*(u(len_id, 1) + u(len_id, nx - 5))
 
-            f(:, nx - 1) = r4_loc*u(:, nx - 1) + u(:, nx) + u(:, nx - 2) &
-                           + r6_loc*(u(:, 1) + u(:, nx - 3)) &
-                           + r7_loc*(u(:, 2) + u(:, nx - 4))
+                f(len_id, nx - 1) = r4_loc*u(len_id, nx - 1) + u(len_id, nx) + u(len_id, nx - 2) &
+                            + r6_loc*(u(len_id, 1) + u(len_id, nx - 3)) &
+                            + r7_loc*(u(len_id, 2) + u(len_id, nx - 4))
 
-            f(:, nx) = r4_loc*u(:, nx) + u(:, 1) + u(:, nx - 1) &
-                       + r6_loc*(u(:, 2) + u(:, nx - 2)) &
-                       + r7_loc*(u(:, 3) + u(:, nx - 3))
+                f(len_id, nx) = r4_loc*u(len_id, nx) + u(len_id, 1) + u(len_id, nx - 1) &
+                        + r6_loc*(u(len_id, 2) + u(len_id, nx - 2)) &
+                        + r7_loc*(u(len_id, 3) + u(len_id, nx - 3))
+            end do
         else
-      f(:, nx - 2) = u(:, nx - 5)*r1(nx - 2) + u(:, nx - 4)*r2(nx - 2) + u(:, nx - 3)*r3(nx - 2) + u(:, nx - 2)*r4(nx - 2) + u(:, nx - 1)*r5(nx - 2) &
-                           + u(:, nx)*r6(nx - 2)
+            !$acc loop
+            do len_id = 1, len
+                f(len_id, nx - 2) = u(len_id, nx - 5)*r1(nx - 2) + u(len_id, nx - 4)*r2(nx - 2) + u(len_id, nx - 3)*r3(nx - 2) + u(len_id, nx - 2)*r4(nx - 2) + u(len_id, nx - 1)*r5(nx - 2) &
+                                    + u(len_id, nx)*r6(nx - 2)
 
-            f(:, nx - 1) = u(:, nx - 4)*r1(nx - 1) + u(:, nx - 3)*r2(nx - 1) + u(:, nx - 2)*r3(nx - 1) + u(:, nx - 1)*r4(nx - 1) &
-                           + u(:, nx)*r5(nx - 1)
+                f(len_id, nx - 1) = u(len_id, nx - 4)*r1(nx - 1) + u(len_id, nx - 3)*r2(nx - 1) + u(len_id, nx - 2)*r3(nx - 1) + u(len_id, nx - 1)*r4(nx - 1) &
+                            + u(len_id, nx)*r5(nx - 1)
 
-            f(:, nx) = u(:, nx - 4)*r7(nx) & ! r7(nx) contains 4. subdiagonal to allow for longer stencil at boundary
-                       + u(:, nx - 3)*r1(nx) + u(:, nx - 2)*r2(nx) + u(:, nx - 1)*r3(nx) + u(:, nx)*r4(nx)
+                f(len_id, nx) = u(len_id, nx - 4)*r7(nx) & ! r7(nx) contains 4. subdiagonal to allow for longer stencil at boundary
+                        + u(len_id, nx - 3)*r1(nx) + u(len_id, nx - 2)*r2(nx) + u(len_id, nx - 1)*r3(nx) + u(len_id, nx)*r4(nx)
 
-            if (any([BCS_DN, BCS_NN] == ibc_loc)) f(:, nx) = 0.0_wp
-
+                if (any([BCS_DN, BCS_NN] == ibc_loc)) f(len_id, nx) = 0.0_wp
+            end do
         end if
+        !$acc end kernels
+        ! CPU-Code =====================================================================
+      !   ! Boundary
+      !   if (periodic) then
+      !       f(:, 1) = r4_loc*u(:, 1) + u(:, 2) + u(:, nx) &
+      !                 + r6_loc*(u(:, 3) + u(:, nx - 1)) &
+      !                 + r7_loc*(u(:, 4) + u(:, nx - 2))
+
+      !       f(:, 2) = r4_loc*u(:, 2) + u(:, 3) + u(:, 1) &
+      !                 + r6_loc*(u(:, 4) + u(:, nx)) &
+      !                 + r7_loc*(u(:, 5) + u(:, nx - 1))
+
+      !       f(:, 3) = r4_loc*u(:, 3) + u(:, 4) + u(:, 2) &
+      !                 + r6_loc*(u(:, 5) + u(:, 1)) &
+      !                 + r7_loc*(u(:, 6) + u(:, nx))
+      !   else
+      !       f(:, 1) = u(:, 1)*r4(1) + u(:, 2)*r5(1) + u(:, 3)*r6(1) + u(:, 4)*r7(1) &
+      !                 + u(:, 5)*r1(1)   ! r1(1) contains 4. superdiagonal to allow for longer stencil at boundary
+
+      !       f(:, 2) = u(:, 1)*r3(2) + u(:, 2)*r4(2) + u(:, 3)*r5(2) + u(:, 4)*r6(2) + u(:, 5)*r7(2)
+
+      !       f(:, 3) = u(:, 1)*r2(3) + u(:, 2)*r3(3) + u(:, 3)*r4(3) + u(:, 4)*r5(3) + u(:, 5)*r6(3) + u(:, 6)*r7(3)
+
+      !       if (any([BCS_ND, BCS_NN] == ibc_loc)) f(:, 1) = 0.0_wp
+
+      !   end if
+
+      !   ! Interior points
+      !   do n = 4, nx - 3
+      !       f(:, n) = r4_loc*u(:, n) + u(:, n + 1) + u(:, n - 1) &
+      !                 + r6_loc*(u(:, n + 2) + u(:, n - 2)) &
+      !                 + r7_loc*(u(:, n + 3) + u(:, n - 3))
+      !   end do
+
+      !   ! Boundary
+      !   if (periodic) then
+      !       f(:, nx - 2) = r4_loc*u(:, nx - 2) + u(:, nx - 1) + u(:, nx - 3) &
+      !                      + r6_loc*(u(:, nx) + u(:, nx - 4)) &
+      !                      + r7_loc*(u(:, 1) + u(:, nx - 5))
+
+      !       f(:, nx - 1) = r4_loc*u(:, nx - 1) + u(:, nx) + u(:, nx - 2) &
+      !                      + r6_loc*(u(:, 1) + u(:, nx - 3)) &
+      !                      + r7_loc*(u(:, 2) + u(:, nx - 4))
+
+      !       f(:, nx) = r4_loc*u(:, nx) + u(:, 1) + u(:, nx - 1) &
+      !                  + r6_loc*(u(:, 2) + u(:, nx - 2)) &
+      !                  + r7_loc*(u(:, 3) + u(:, nx - 3))
+      !   else
+      ! f(:, nx - 2) = u(:, nx - 5)*r1(nx - 2) + u(:, nx - 4)*r2(nx - 2) + u(:, nx - 3)*r3(nx - 2) + u(:, nx - 2)*r4(nx - 2) + u(:, nx - 1)*r5(nx - 2) &
+      !                      + u(:, nx)*r6(nx - 2)
+
+      !       f(:, nx - 1) = u(:, nx - 4)*r1(nx - 1) + u(:, nx - 3)*r2(nx - 1) + u(:, nx - 2)*r3(nx - 1) + u(:, nx - 1)*r4(nx - 1) &
+      !                      + u(:, nx)*r5(nx - 1)
+
+      !       f(:, nx) = u(:, nx - 4)*r7(nx) & ! r7(nx) contains 4. subdiagonal to allow for longer stencil at boundary
+      !                  + u(:, nx - 3)*r1(nx) + u(:, nx - 2)*r2(nx) + u(:, nx - 1)*r3(nx) + u(:, nx)*r4(nx)
+
+      !       if (any([BCS_DN, BCS_NN] == ibc_loc)) f(:, nx) = 0.0_wp
+
+      !   end if
+        ! ======================================================================================
 
         return
     end subroutine MatMul_7d_sym
