@@ -305,6 +305,7 @@ contains
     ! Calculate f = f + B u, assuming B is tri-diagonal
     subroutine MatMul_3d_add(nx, len, r1, r2, r3, u, f)
         integer(wi), intent(in) :: nx, len       ! m linear systems or size n
+        integer(wi) :: len_id
         real(wp), intent(in) :: r1(nx), r2(nx), r3(nx)
         real(wp), intent(in) :: u(len, nx)       ! function u
         real(wp), intent(inout) :: f(len, nx)    ! RHS, f = B u
@@ -684,6 +685,7 @@ contains
         real(wp), intent(out) :: f(len, nx)      ! RHS, f = B u
         logical, intent(in) :: periodic
         integer, optional :: ibc
+        integer(wi) :: len_id
 
         ! -------------------------------------------------------------------
         integer(wi) n
@@ -815,6 +817,7 @@ contains
         real(wp), intent(out) :: f(len, nx)      ! RHS, f = B u
         logical, intent(in) :: periodic
         integer, optional :: ibc
+        integer(wi) :: len_id
 
         ! -------------------------------------------------------------------
         integer(wi) n
