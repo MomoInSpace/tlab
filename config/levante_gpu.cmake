@@ -18,7 +18,8 @@ elseif(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration
   #set(CMAKE_Fortran_FLAGS "-acc=gpu -target=gpu -Minfo=accel,inline -gpu=ccnative,lineinfo -cpp")
   #set(CMAKE_Fortran_FLAGS "-acc=gpu -target=gpu -Mfree -Minfo=accel,inline -gpu=lineinfo,cc80 -cpp")
   set(USER_Fortran_FLAGS "-cpp -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu -gpu=lineinfo,cc80,fastmath")
-  add_definitions(-D_DEBUG)
+  add_definitions(-DNO_ASSUMED_RANKS)
+  add_definitions(-D_DEBUG )
   set(CMKAE_BUILD_TYPE DEBUG)
 
 
@@ -52,21 +53,29 @@ endif()
 #set(FFTW_INCLUDE_DIR   "/home/m/m300912/local_include/include")
 #set(FFTW_LIB           "/home/m/m300912/local_include/lib/libfftw.a")
 #set(FFTW_LIB           "-lfftw3")
-set(FFTW_INCLUDE_DIR   "/sw/spack-levante/fftw-3.3.10-fnfhvr/include/")
-set(FFTW_LIB           "/sw/spack-levante/fftw-3.3.10-fnfhvr/lib/libfftw3.a")
-set(INCLUDE_DIRS ${FFTW_INCLUDE_DIR})
-set(LIBS ${FFTW_LIB})
 
-add_definitions(-DUSE_NETCDF)
-#set(NC_INCLUDE_DIR     "/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include")
-#set(NC_LIB             "-I/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/include \
-#                        -L/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib -lnetcdff \
-#                        -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib")
-#			prepend-path    C_INCLUDE_PATH /sw/spack-levante/netcdf-fortran-4.5.3-5di6qe/include
-set(NC_INCLUDE_DIR     "/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/include")
-set(NC_LIB             "-I/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/include \
+if(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration
+  set(FFTW_INCLUDE_DIR   "/sw/spack-levante/fftw-3.3.10-fnfhvr/include/")
+  set(FFTW_LIB           "/sw/spack-levante/fftw-3.3.10-fnfhvr/lib/libfftw3.a")
+
+  add_definitions(-DUSE_NETCDF)
+  set(NC_INCLUDE_DIR     "/sw/spack-levante/netcdf-fortran-4.5.3-ojzrgm/include")
+  set(NC_LIB             "-I/sw/spack-levante/netcdf-fortran-4.5.3-ojzrgm/include \
+                       -L/sw/spack-levante/netcdf-fortran-4.5.3-ojzrgm/lib -lnetcdff \
+                       -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-ojzrgm/lib")
+else()
+  set(FFTW_INCLUDE_DIR   "/sw/spack-levante/fftw-3.3.10-fnfhvr/include/")
+  set(FFTW_LIB           "/sw/spack-levante/fftw-3.3.10-fnfhvr/lib/libfftw3.a")
+
+  add_definitions(-DUSE_NETCDF)
+  set(NC_INCLUDE_DIR     "/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/include")
+  set(NC_LIB             "-I/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/include \
                         -L/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/lib -lnetcdff \
                         -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-jlxcfz/lib")
+endif()
+
+set(INCLUDE_DIRS ${FFTW_INCLUDE_DIR})
+set(LIBS ${FFTW_LIB})
 
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${NC_INCLUDE_DIR})
 set(LIBS ${LIBS} ${NC_LIB})
