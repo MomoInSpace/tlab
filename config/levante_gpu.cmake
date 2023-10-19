@@ -17,7 +17,7 @@ elseif(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration
   # On levante use the module nvhpc/22.5-gcc-11.2.0
   set(ENV{FC} nvfortran)
   set(CMAKE_Fortran_COMPILER nvfortran)
-  # Try ccnative instead of cc80, gpu=fastmath can be removed for more accuracy
+  # gpu=fastmath can be removed for more accuracy
   set(USER_Fortran_FLAGS "-cpp -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath")
   set(CMKAE_BUILD_TYPE DEBUG)
   add_definitions(-DNO_ASSUMED_RANKS) # nvfortran doesn't support assumed ranks yet
