@@ -22,6 +22,8 @@ elseif(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration
   set(CMKAE_BUILD_TYPE DEBUG)
   add_definitions(-DNO_ASSUMED_RANKS) # nvfortran doesn't support assumed ranks yet
   add_definitions(-D_DEBUG )
+  add_definitions(-DUSE_GPU)
+  
 
 
 else() # compiler for serial build
