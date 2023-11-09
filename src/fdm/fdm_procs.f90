@@ -339,6 +339,7 @@ contains
     ! #######################################################################
     subroutine MatMul_3d_antisym(nx, len, r1, r2, r3, u, f, periodic, ibc, rhs_b, rhs_t, bcs_b, bcs_t)
         integer(wi), intent(in) :: nx, len                      ! m linear systems or size n
+        integer(wi)             :: len_id
         real(wp), intent(in) :: r1(nx), r2(nx), r3(nx)          ! RHS diagonals
         real(wp), intent(in) :: u(len, nx)                      ! function u
         real(wp), intent(inout) :: f(len, nx)                   ! RHS, f = B u
@@ -388,10 +389,20 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        do n = 3, nx - 2
-            f(:, n) = u(:, n + 1) - u(:, n - 1)
-        end do
-
+        #ifdef USE_GPU
+        !$acc kernels
+            do n = 3, nx - 2
+                do len_id = 1, len 
+                    f(len_id, n) = u(len_id, n + 1) - u(len_id, n - 1)
+                end do
+            end do
+        !$acc end kernels
+        #else
+            do n = 3, nx - 2
+                f(:, n) = u(:, n + 1) - u(:, n - 1)
+            end do
+        #endif
+        
         ! -------------------------------------------------------------------
         ! Boundary
         if (periodic) then
@@ -427,6 +438,7 @@ contains
     ! Calculate f = B u, assuming B is symmetric tri-diagonal with 1. off-diagonal equal to 1
     subroutine MatMul_3d_sym(nx, len, r1, r2, r3, u, f, periodic, ibc)
         integer(wi), intent(in) :: nx, len                   ! m linear systems or size n
+        integer(wi)             :: len_id
         real(wp), intent(in) :: r1(nx), r2(nx), r3(nx)    ! RHS diagonals
         real(wp), intent(in) :: u(len, nx)                   ! function u
         real(wp), intent(out) :: f(len, nx)                  ! RHS, f = B u
@@ -459,10 +471,19 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        do n = 2, nx - 1
-            f(:, n) = u(:, n + 1) + u(:, n - 1) + u(:, n)*r2(n)
-        end do
-
+        #ifdef USE_GPU
+        !$acc kernels
+            do n = 2, nx - 1
+                do len_id = 1, len 
+                    f(len_id, n) = u(len_id, n + 1) + u(len_id, n - 1) + u(len_id, n)*r2(n)
+                end do
+            end do
+        !$acc end kernels
+        #else
+            do n = 2, nx - 1
+                f(:, n) = u(:, n + 1) + u(:, n - 1) + u(:, n)*r2(n)
+            end do
+        #endif
         ! -------------------------------------------------------------------
         ! Boundary
         if (periodic) then
@@ -483,6 +504,7 @@ contains
     ! Calculate f = B u, assuming B is penta-diagonal with center diagonal is 1
     subroutine MatMul_5d(nx, len, r1, r2, r4, r5, u, f, ibc, rhs_b, rhs_t, bcs_b, bcs_t)
         integer(wi), intent(in) :: nx, len       ! len linear systems or size nx
+        integer(wi)             :: len_id
         real(wp), intent(in) :: r1(nx), r2(nx), r4(nx), r5(nx)    ! RHS diagonals (#=3-1 because center diagonal is 1)
         real(wp), intent(in) :: u(len, nx)       ! function u
         real(wp), intent(out) :: f(len, nx)      ! RHS, f = B u
@@ -533,9 +555,19 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        do n = 5, nx - 4
-            f(:, n) = u(:, n - 2)*r1(n) + u(:, n - 1)*r2(n) + u(:, n) + u(:, n + 1)*r4(n) + u(:, n + 2)*r5(n)
-        end do
+        #ifdef USE_GPU
+        !$acc kernels
+            do n = 5, nx - 4
+                do len_id = 1, len 
+                    f(len_id, n) = u(len_id, n - 2)*r1(n) + u(len_id, n - 1)*r2(n) + u(len_id, n) + u(len_id, n + 1)*r4(n) + u(len_id, n + 2)*r5(n)
+                end do
+            end do
+        !$acc end kernels
+        #else
+            do n = 5, nx - 4
+                f(:, n) = u(:, n - 2)*r1(n) + u(:, n - 1)*r2(n) + u(:, n) + u(:, n + 1)*r4(n) + u(:, n + 2)*r5(n)
+            end do
+        #endif
 
         ! -------------------------------------------------------------------
         ! Boundary; the last 5/2+1+1=4 rows might be different
@@ -573,6 +605,7 @@ contains
     ! Calculate f = f + B u, assuming B is pentadiagonal
     subroutine MatMul_5d_add(nx, len, r1, r2, r3, r4, r5, u, f)
         integer(wi), intent(in) :: nx, len       ! m linear systems or size n
+        integer(wi)             :: len_id
         real(wp), intent(in) :: r1(nx), r2(nx), r3(nx), r4(nx), r5(nx)
         real(wp), intent(in) :: u(len, nx)       ! function u
         real(wp), intent(inout) :: f(len, nx)    ! RHS, f = B u
@@ -587,9 +620,19 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        do n = 3, nx - 2
-            f(:, n) = f(:, n) + u(:, n - 2)*r1(n) + u(:, n - 1)*r2(n) + u(:, n)*r3(n) + u(:, n + 1)*r4(n) + u(:, n + 2)*r5(n)
-        end do
+        #ifdef USE_GPU
+        !$acc kernels
+            do n = 3, nx - 2
+                do len_id = 1, len 
+                f(len_id, n) = f(len_id, n) + u(len_id, n - 2)*r1(n) + u(len_id, n - 1)*r2(n) + u(len_id, n)*r3(n) + u(len_id, n + 1)*r4(n) + u(len_id, n + 2)*r5(n)
+                end do
+            end do
+        !$acc end kernels
+        #else
+            do n = 3, nx - 2
+                f(:, n) = f(:, n) + u(:, n - 2)*r1(n) + u(:, n - 1)*r2(n) + u(:, n)*r3(n) + u(:, n + 1)*r4(n) + u(:, n + 2)*r5(n)
+            end do
+        #endif
 
         ! -------------------------------------------------------------------
         ! Boundary
@@ -604,6 +647,7 @@ contains
     ! It also assumes equal coefficients in the 2. off-diagonal for the interior points
     subroutine MatMul_5d_antisym(nx, len, r1, r2, r3, r4, r5, u, f, periodic, ibc, rhs_b, rhs_t, bcs_b, bcs_t)
         integer(wi), intent(in) :: nx, len          ! m linear systems or size n
+        integer(wi)             :: len_id
         real(wp), intent(in) :: r1(nx), r2(nx), r3(nx), r4(nx), r5(nx)  ! RHS diagonals
         real(wp), intent(in) :: u(len, nx)          ! function u
         real(wp), intent(inout) :: f(len, nx)       ! RHS, f = B u; f_1 and f_n can contain neumann bcs
@@ -661,11 +705,23 @@ contains
 
         end if
 
-        ! Interior points
+        ! -------------------------------------------------------------------
+        ! Interior points; accelerate
+        #ifdef USE_GPU
+        !$acc kernels
         do n = 4, nx - 3
-            f(:, n) = u(:, n + 1) - u(:, n - 1) + r5_loc*(u(:, n + 2) - u(:, n - 2))
+            do len_id = 1, len 
+                f(len_id, n) = u(len_id, n + 1) - u(len_id, n - 1) + r5_loc*(u(len_id, n + 2) - u(len_id, n - 2))
+            end do
         end do
+        !$acc end kernels
+        #else
+            do n = 4, nx - 3
+                f(:, n) = u(:, n + 1) - u(:, n - 1) + r5_loc*(u(:, n + 2) - u(:, n - 2))
+            end do
+        #endif
 
+        ! -------------------------------------------------------------------
         ! Boundary
         if (periodic) then
             f(:, nx - 2) = u(:, nx - 1) - u(:, nx - 3) + r5_loc*(u(:, nx) - u(:, nx - 4))
