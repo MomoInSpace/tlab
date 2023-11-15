@@ -8,6 +8,10 @@ FILE(GLOB sourcefiles "fdm/vpartial.f90")
 add_executable(vpartial.x ${sourcefiles})
 target_link_libraries(vpartial.x operators ibm io thermodynamics fdm ${LEVEL1_LIBS} ${LIBS})
 
+FILE(GLOB sourcefiles "fdm/vpartialgpu.f90")
+add_executable(vpartialgpu.x ${sourcefiles})
+target_link_libraries(vpartialgpu.x operators ibm io thermodynamics fdm ${LEVEL1_LIBS} ${LIBS})
+
 FILE(GLOB sourcefiles "fdm/vpartial3d.f90")
 add_executable(vpartial3d.x ${sourcefiles})
 target_link_libraries(vpartial3d.x operators ibm io thermodynamics fdm ${LEVEL1_LIBS} ${LIBS})
