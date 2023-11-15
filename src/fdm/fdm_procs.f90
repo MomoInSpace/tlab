@@ -389,7 +389,7 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        #ifdef USE_GPU
+#ifdef USE_GPU
         !$acc kernels
             do n = 3, nx - 2
                 do len_id = 1, len 
@@ -397,11 +397,11 @@ contains
                 end do
             end do
         !$acc end kernels
-        #else
+#else
             do n = 3, nx - 2
                 f(:, n) = u(:, n + 1) - u(:, n - 1)
             end do
-        #endif
+#endif
         
         ! -------------------------------------------------------------------
         ! Boundary
@@ -471,7 +471,7 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        #ifdef USE_GPU
+#ifdef USE_GPU
         !$acc kernels
             do n = 2, nx - 1
                 do len_id = 1, len 
@@ -479,11 +479,11 @@ contains
                 end do
             end do
         !$acc end kernels
-        #else
+#else
             do n = 2, nx - 1
                 f(:, n) = u(:, n + 1) + u(:, n - 1) + u(:, n)*r2(n)
             end do
-        #endif
+#endif
         ! -------------------------------------------------------------------
         ! Boundary
         if (periodic) then
@@ -555,7 +555,7 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        #ifdef USE_GPU
+#ifdef USE_GPU
         !$acc kernels
             do n = 5, nx - 4
                 do len_id = 1, len 
@@ -563,11 +563,11 @@ contains
                 end do
             end do
         !$acc end kernels
-        #else
+#else
             do n = 5, nx - 4
                 f(:, n) = u(:, n - 2)*r1(n) + u(:, n - 1)*r2(n) + u(:, n) + u(:, n + 1)*r4(n) + u(:, n + 2)*r5(n)
             end do
-        #endif
+#endif
 
         ! -------------------------------------------------------------------
         ! Boundary; the last 5/2+1+1=4 rows might be different
@@ -620,7 +620,7 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        #ifdef USE_GPU
+#ifdef USE_GPU
         !$acc kernels
             do n = 3, nx - 2
                 do len_id = 1, len 
@@ -628,11 +628,11 @@ contains
                 end do
             end do
         !$acc end kernels
-        #else
+#else
             do n = 3, nx - 2
                 f(:, n) = f(:, n) + u(:, n - 2)*r1(n) + u(:, n - 1)*r2(n) + u(:, n)*r3(n) + u(:, n + 1)*r4(n) + u(:, n + 2)*r5(n)
             end do
-        #endif
+#endif
 
         ! -------------------------------------------------------------------
         ! Boundary
@@ -707,7 +707,7 @@ contains
 
         ! -------------------------------------------------------------------
         ! Interior points; accelerate
-        #ifdef USE_GPU
+#ifdef USE_GPU
         !$acc kernels
         do n = 4, nx - 3
             do len_id = 1, len 
@@ -715,11 +715,11 @@ contains
             end do
         end do
         !$acc end kernels
-        #else
+#else
             do n = 4, nx - 3
                 f(:, n) = u(:, n + 1) - u(:, n - 1) + r5_loc*(u(:, n + 2) - u(:, n - 2))
             end do
-        #endif
+#endif
 
         ! -------------------------------------------------------------------
         ! Boundary
