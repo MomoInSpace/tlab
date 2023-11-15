@@ -18,8 +18,10 @@ elseif(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration
   set(ENV{FC} nvfortran)
   set(CMAKE_Fortran_COMPILER nvfortran)
   # Try ccnative instead of cc80, gpu=fastmath can be removed for more accuracy
-  set(USER_Fortran_FLAGS "-cpp -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath")
+  set(USER_Fortran_FLAGS "-cpp -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath -pg -lg")
   set(CMKAE_BUILD_TYPE DEBUG)
+  #set(USER_Fortran_FLAGS_RELEASE "-cpp -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath")
+  #set(CMAKE_BUILD_TYPE RELEASE)
   add_definitions(-DNO_ASSUMED_RANKS) # nvfortran doesn't support assumed ranks yet
   add_definitions(-D_DEBUG )
   add_definitions(-DUSE_GPU)
@@ -32,18 +34,19 @@ else() # compiler for serial build
 
   if    ( ${BUILD_TYPE} STREQUAL "BIG" )
     set(CMAKE_BUILD_TYPE RELEASE)
-	#set(USER_Fortran_FLAGS_RELEASE "-fconvert=big-endian -fallow-argument-mismatch -ffpe-summary=none -O3 -ffast-math -mtune=native -march=native")
+	set(USER_Fortran_FLAGS_RELEASE "-fconvert=big-endian -fallow-argument-mismatch -ffpe-summary=none -O3 -ffast-math -mtune=native -march=native")
 
   elseif( ${BUILD_TYPE} STREQUAL "LITTLE" )
     set(CMAKE_BUILD_TYPE RELEASE)
-	#set(USER_Fortran_FLAGS_RELEASE "-fconvert=big-endian -fallow-argument-mismatch -ffpe-summary=none -O3 -ffast-math -mtune=native -march=native")
+    set(USER_Fortran_FLAGS_RELEASE "-fconvert=big-endian -fallow-argument-mismatch -ffpe-summary=none -O3 -ffast-math -mtune=native -march=native")
 
   else()
-    set(USER_Fortran_FLAGS_DEBUG "-O0 -p -ggdb -Wall -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,precision,denormal")
-    #set(USER_Fortran_FLAGS_DEBUG "-O0 -p -ggdb -Wall -fbacktrace -ffpe-trap=invalid")
+    #set(USER_Fortran_FLAGS_DEBUG "-O0 -p -ggdb -Wall -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,precision,denormal")
+    set(USER_Fortran_FLAGS_DEBUG "-O0 -p -ggdb -Wall -fbacktrace")# -ffpe-trap=invalid")
     #set(USER_Fortran_FLAGS_DEBUG "-O0 -ggdb -Wall -fbacktrace -fconvert=little-endian -fallow-argument-mismatch -ffpe-trap=invalid,zero,overflow")
     set(CMAKE_BUILD_TYPE DEBUG)
     add_definitions(-D_DEBUG)
+    add_definitions(-DNO_ASSUMED_RANKS) # nvfortran doesn't support assumed ranks yet
 
   endif()
 
