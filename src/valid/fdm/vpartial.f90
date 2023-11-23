@@ -46,6 +46,8 @@ program VPARTIAL
     g%scale = 1.0_wp
     g%uniform = .false.
 
+    print*, "Hallo 1"
+
     isize_field = imax*jmax*kmax
     isize_txc_field = isize_field
     isize_wrk3d = isize_txc_field
@@ -56,6 +58,7 @@ program VPARTIAL
     inb_txc = 9
 
     call TLAB_ALLOCATE(__FILE__)
+    print*, "Hallo 2"
 
     u(1:len, 1:imax) => txc(1:imax*jmax*kmax, 1)
     du1_a(1:len, 1:imax) => txc(1:imax*jmax*kmax, 2)
@@ -67,7 +70,9 @@ program VPARTIAL
     du2_n2(1:len, 1:imax) => txc(1:imax*jmax*kmax, 8)
     du2_n3(1:len, 1:imax) => txc(1:imax*jmax*kmax, 9)
 
+    DEALLOCATE(x)
     call TLAB_ALLOCATE_ARRAY_DOUBLE(__FILE__, x, [g%size, g%inb_grid], g%name)
+    print*, "Hallo 3"
 
     ! Valid settings
     test_type = 1

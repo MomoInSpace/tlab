@@ -18,11 +18,11 @@ elseif(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration
   set(ENV{FC} nvfortran)
   set(CMAKE_Fortran_COMPILER nvfortran)
   # Try ccnative instead of cc80, gpu=fastmath can be removed for more accuracy
-  set(USER_Fortran_FLAGS "-cpp -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath")
-  set(CMKAE_BUILD_TYPE DEBUG)
+  set(USER_Fortran_FLAGS "-cpp -g -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath")
+  #set(CMKAE_BUILD_TYPE DEBUG)
   add_definitions(-DNO_ASSUMED_RANKS) # nvfortran doesn't support assumed ranks yet
-  add_definitions(-D_DEBUG )
-  add_definitions(-DUSE_GPU)
+  #add_definitions(-D_DEBUG )
+  #add_definitions(-DUSE_GPU)
 
 
 else() # compiler for serial build
@@ -36,7 +36,7 @@ else() # compiler for serial build
 
   elseif( ${BUILD_TYPE} STREQUAL "LITTLE" )
     set(CMAKE_BUILD_TYPE RELEASE)
-	#set(USER_Fortran_FLAGS_RELEASE "-fconvert=big-endian -fallow-argument-mismatch -ffpe-summary=none -O3 -ffast-math -mtune=native -march=native")
+	set(USER_Fortran_FLAGS_RELEASE "-fconvert=big-endian -fallow-argument-mismatch -ffpe-summary=none -O3 -ffast-math -mtune=native -march=native")
 
   else()
     set(USER_Fortran_FLAGS_DEBUG "-O0 -p -ggdb -Wall -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow,precision,denormal")

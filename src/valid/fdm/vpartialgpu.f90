@@ -41,7 +41,7 @@ program VPARTIAL
     visc = 1.0_wp   ! Needed in FDM_INITIALIZE
     schmidt = 1.0_wp
 
-    g%inb_grid = 71
+    g%inb_grid = 100
     g%size = imax
     g%scale = 1.0_wp
     g%uniform = .false.
@@ -67,6 +67,7 @@ program VPARTIAL
     du2_n2(1:len, 1:imax) => txc(1:imax*jmax*kmax, 8)
     du2_n3(1:len, 1:imax) => txc(1:imax*jmax*kmax, 9)
 
+    DEALLOCATE(x)
     call TLAB_ALLOCATE_ARRAY_DOUBLE(__FILE__, x, [g%size, g%inb_grid], g%name)
 
     ! Valid settings
@@ -89,18 +90,20 @@ program VPARTIAL
             x(i, 1) = real(i - 1, wp)/real(imax, wp)*g%scale
         end do
     else
-        ! do i = 1, imax
-        !     x(i, 1) = real(i - 1, wp)/real(imax - 1, wp)*g%scale
-        ! end do
-        open (21, file='y.dat')
-        do i = 1, imax
-            read (21, *) x(i, 1)
-        end do
-        close (21)
-        g%scale = x(imax, 1) - x(1, 1)
+         do i = 1, imax
+             x(i, 1) = real(i - 1, wp)/real(imax - 1, wp)*g%scale
+         end do
+        !open (21, file='y.dat')
+        !do i = 1, imax
+        !    read (21, *) x(i, 1)
+        !end do
+        !close (21)
+        !g%scale = x(imax, 1) - x(1, 1)
     end if
 
+    print*, "Heyho 1"
     call FDM_INITIALIZE(x, g, wrk1d)
+    print*, "Heyho 2"
 
 ! Bcs
     bcs_aux = 0
