@@ -13,16 +13,24 @@ if ( ${BUILD_TYPE} STREQUAL "PARALLEL" ) # compiler for parallel build
   #set(USER_Fortran_FLAGS_RELEASE "-fconvert=little-endian -fallow-argument-mismatch -O3 -ffast-math -mtune=native -march=native")
   set(CMAKE_BUILD_TYPE RELEASE)
   add_definitions(-DUSE_MPI -DUSE_MPI_IO)
+elseif(${BUILD_TYPE} STREQUAL "NVF" ) # Compiler for gpu acceleration
+  # On levante use the module nvhpc/22.5-gcc-11.2.0
+  set(ENV{FC} nvfortran)
+  set(CMAKE_Fortran_COMPILER nvfortran)
+  # Try ccnative instead of cc80, gpu=fastmath can be removed for more accuracy
+  set(USER_Fortran_FLAGS "-cpp  -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath") #-g")
+  add_definitions(-DNO_ASSUMED_RANKS) # nvfortran doesn't support assumed ranks yet
+  add_definitions(-DUSE_NVFORTRAN)
+
 elseif(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration
   # On levante use the module nvhpc/22.5-gcc-11.2.0
   set(ENV{FC} nvfortran)
   set(CMAKE_Fortran_COMPILER nvfortran)
   # Try ccnative instead of cc80, gpu=fastmath can be removed for more accuracy
-  set(USER_Fortran_FLAGS "-cpp -g -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath")
-  #set(CMKAE_BUILD_TYPE DEBUG)
+  set(USER_Fortran_FLAGS "-cpp  -Mfree -Mbuiltin -Minfo=accel,inline -acc=gpu,verystrict -gpu=lineinfo,cc80,fastmath") #-g")
   add_definitions(-DNO_ASSUMED_RANKS) # nvfortran doesn't support assumed ranks yet
-  #add_definitions(-D_DEBUG )
-  #add_definitions(-DUSE_GPU)
+  add_definitions(-DUSE_NVFORTRAN)
+  add_definitions(-DUSE_GPU)
 
 
 else() # compiler for serial build
@@ -50,7 +58,7 @@ else() # compiler for serial build
 endif()
 
 # As mpif90 uses gfortran as backbone, we only need to provide two sets of libraries
-if(${BUILD_TYPE} STREQUAL "GPU" ) # Compiler for gpu acceleration
+if(${BUILD_TYPE} STREQUAL "GPU" OR ${BUILD_TYPE} STREQUAL "NVF") # Compiler for gpu acceleration
   # fftw needs to be installed with the command
   # spack install fftw %nvhpc@22.5 ^openmpi%nvhpc ^/mviuwj
   # and than linked to the directory

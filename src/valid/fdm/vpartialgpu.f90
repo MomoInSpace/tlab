@@ -35,7 +35,7 @@ program VPARTIAL
 ! Initialize
     imax = 129
     jmax = 100
-    kmax = 100
+    kmax = 1000
     len = jmax*kmax
 
     visc = 1.0_wp   ! Needed in FDM_INITIALIZE
@@ -67,7 +67,10 @@ program VPARTIAL
     du2_n2(1:len, 1:imax) => txc(1:imax*jmax*kmax, 8)
     du2_n3(1:len, 1:imax) => txc(1:imax*jmax*kmax, 9)
 
+#ifdef USE_NVFORTRAN 
     DEALLOCATE(x)
+#endif
+
     call TLAB_ALLOCATE_ARRAY_DOUBLE(__FILE__, x, [g%size, g%inb_grid], g%name)
 
     ! Valid settings
@@ -101,9 +104,7 @@ program VPARTIAL
         !g%scale = x(imax, 1) - x(1, 1)
     end if
 
-    print*, "Heyho 1"
     call FDM_INITIALIZE(x, g, wrk1d)
-    print*, "Heyho 2"
 
 ! Bcs
     bcs_aux = 0
