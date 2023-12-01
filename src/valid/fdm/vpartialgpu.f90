@@ -35,7 +35,7 @@ program VPARTIAL
 ! Initialize
     imax = 129
     jmax = 100
-    kmax = 1000
+    kmax = 100
     len = jmax*kmax
 
     visc = 1.0_wp   ! Needed in FDM_INITIALIZE
