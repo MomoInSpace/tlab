@@ -359,7 +359,7 @@ contains
     ! #######################################################################
     subroutine MatMul_3d_antisym(nx, len, r1, r2, r3, u, f, periodic, ibc, rhs_b, rhs_t, bcs_b, bcs_t)
         integer(wi), intent(in) :: nx, len                      ! m linear systems or size n
-        integer(wi)             :: len_id
+        integer(wi)             :: len_id, gpu_test_id
         real(wp), intent(in) :: r1(nx), r2(nx), r3(nx)          ! RHS diagonals
         real(wp), intent(in) :: u(len, nx)                      ! function u
         real(wp), intent(inout) :: f(len, nx)                   ! RHS, f = B u
@@ -411,16 +411,20 @@ contains
         ! Interior points; accelerate
 #ifdef USE_GPU
         !$acc kernels
+        do gpu_test_id = 1, 1, 1
             do n = 3, nx - 2
                 do len_id = 1, len 
                     f(len_id, n) = u(len_id, n + 1) - u(len_id, n - 1)
                 end do
             end do
+        end do
         !$acc end kernels
 #else
+        do gpu_test_id = 1, 1, 1
             do n = 3, nx - 2
                 f(:, n) = u(:, n + 1) - u(:, n - 1)
             end do
+        end do
 #endif
         ! -------------------------------------------------------------------
         ! Boundary
